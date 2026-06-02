@@ -11,11 +11,35 @@ st.set_page_config(
     layout="wide"
 )
 
-# 1. Load model dan encoders langsung dari root direktori
+# 1. Fungsi alternatif untuk auto-train langsung di Cloud jika pkl bentrok
 @st.cache_resource
 def load_models():
-    model = joblib.load("churn_model.pkl")
-    encoders = joblib.load("encoders.pkl")
+    try:
+        # Coba load pkl biasa dulu
+        model = joblib.load("churn_model.pkl")
+        encoders = joblib.load("encoders.pkl")
+    except Exception:
+        # Jika pkl gagal/bentrok versi, jalankan training kilat di background
+        from sklearn.ensemble import RandomForestClassifier
+        from sklearn.preprocessing import LabelEncoder
+        
+        df = pd.read_csv("WA_Fn-UseC_-Telco-Customer-Churn.csv")
+        df.drop("customerID", axis=1, inplace=True, errors="ignore")
+        df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce").fillna(0)
+        df.fillna(0, inplace=True)
+        
+        encoders = {}
+        for col in df.select_dtypes(include="object").columns:
+            le = LabelEncoder()
+            df[col] = le.fit_transform(df[col])
+            encoders[col] = le
+            
+        X = df.drop("Churn", axis=1)
+        y = df["Churn"]
+        
+        model = RandomForestClassifier(n_estimators=100, random_state=42)
+        model.fit(X, y)
+        
     return model, encoders
 
 model, encoders = load_models()
