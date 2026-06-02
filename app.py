@@ -11,26 +11,26 @@ st.set_page_config(
     layout="wide"
 )
 
-# 1. Load model dan encoders
+# 1. Load model dan encoders langsung dari root direktori
 @st.cache_resource
 def load_models():
-    model = joblib.load("model/churn_model.pkl")
-    encoders = joblib.load("model/encoders.pkl")
+    model = joblib.load("churn_model.pkl")
+    encoders = joblib.load("encoders.pkl")
     return model, encoders
 
 model, encoders = load_models()
 
-# Load dataset utama untuk visualisasi & metrik evaluasi
+# Load dataset utama langsung dari root direktori
 @st.cache_data
 def load_data():
-    df = pd.read_csv("data/WA_Fn-UseC_-Telco-Customer-Churn.csv")
+    df = pd.read_csv("WA_Fn-UseC_-Telco-Customer-Churn.csv")
     df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce").fillna(0)
     return df
 
 try:
     df_clean = load_data()
 except FileNotFoundError:
-    st.error("File 'data/WA_Fn-UseC_-Telco-Customer-Churn.csv' tidak ditemukan. Harap periksa folder data Anda.")
+    st.error("File 'WA_Fn-UseC_-Telco-Customer-Churn.csv' tidak ditemukan. Harap periksa repositori GitHub Anda.")
     st.stop()
 
 
@@ -144,7 +144,7 @@ with tab2:
     kpi1.metric(label="Total Database Pelanggan", value=f"{total_customers:,}")
     kpi2.metric(label="Rasio Churn Historis", value=f"{churn_rate:.2%}")
     kpi3.metric(label="Rerata Tagihan Bulanan", value=f"${avg_monthly:.2f}")
-    kpi4.metric(label="Akurasi Model ML (RF)", value="79.31%", delta="Production Ready") # Nilai akurasi disesuaikan dari hasil train_model.py
+    kpi4.metric(label="Akurasi Model ML (RF)", value="79.31%", delta="Production Ready")
     
     st.write("---")
     
